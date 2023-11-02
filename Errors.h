@@ -1,12 +1,12 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
-struct Error {
+struct ERROR {
     int error;
     const char *description;
 };
 
-enum TypeError {
+enum TYPE_ERROR {
     ERROR_NO =                          0,
     ERROR_ALLOC_FAIL =                  1 << 0,
     ERROR_MEMCPY_FAIL =                 1 << 1,
@@ -18,7 +18,7 @@ enum TypeError {
     ERROR_INVALID_INDEX =               1 << 7,
 };
 
-const Error ERRORS[] = {
+const ERROR ERRORS[] = {
     {ERROR_NO,                          "no errors"},
     {ERROR_ALLOC_FAIL,                  "realloc fail"},
     {ERROR_MEMCPY_FAIL,                 "memcpy fail"},
@@ -29,7 +29,7 @@ const Error ERRORS[] = {
     {ERROR_LIST_CAPACITY_LESS_SIZE,     "list capacity less than size"},
     {ERROR_INVALID_INDEX,               "invalid index in array"},
 };
-const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(Error);
+const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(ERROR);
 
 #define err_dump(err) err_dump_(err, __FILE__, __PRETTY_FUNCTION__, __LINE__) 
 void err_dump_(int err, const char *file, const char *func, int line);

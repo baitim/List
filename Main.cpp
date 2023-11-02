@@ -19,9 +19,42 @@ int main()
     }
 
     err = list_dump(&list);
-    if (err) {
-        err_dump(err);
-        return err;
+        if (err) {
+            err_dump(err);
+            return err;
+        }
+
+    for (int i = 0; i < 10; i++) {
+        err = list_dump(&list);
+        if (err) {
+            err_dump(err);
+            return err;
+        }
+        err = list_push(&list, i, i + 10);
+        if (err) {
+            err_dump(err);
+            return err;
+        }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        err = list_dump(&list);
+        if (err) {
+            err_dump(err);
+            return err;
+        }
+        int x = 0;
+        err = list_pop(&list, i, &x);
+        if (err) {
+            err_dump(err);
+            return err;
+        }
+        printf("POPED ELEMENT = %d\n", x);
+        err = list_dump(&list);
+        if (err) {
+            err_dump(err);
+            return err;
+        }
     }
 
     err = list_dtor(&list);

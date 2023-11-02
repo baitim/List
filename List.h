@@ -3,9 +3,6 @@
 
 #include "Errors.h"
 
-const int MAX_SIZE_LIST = 10;
-const int POISON_EL = -0xbe;
-
 struct LIST {
     int capacity;
     int size;
@@ -14,11 +11,11 @@ struct LIST {
     int *prev;
 };
 
-TypeError list_ctor(LIST *list);
-TypeError list_dump(LIST *list);
-TypeError list_verify(LIST *list);
-TypeError list_dtor(LIST *list);
-TypeError list_push(LIST *list, int index);
-TypeError list_pop(LIST *list);
+TYPE_ERROR list_ctor  (LIST *list);
+TYPE_ERROR list_dump  (LIST *list);
+TYPE_ERROR list_verify(LIST *list);
+TYPE_ERROR list_dtor  (LIST *list);
+TYPE_ERROR list_push  (LIST *list, int index, int value);
+TYPE_ERROR list_pop   (LIST *list, int index, int *value);
 
 #endif // LIST_H
