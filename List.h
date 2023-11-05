@@ -3,7 +3,8 @@
 
 #include "Errors.h"
 
-struct LIST {
+struct List {
+    int fre;
     int capacity;
     int size;
     int *data;
@@ -11,11 +12,12 @@ struct LIST {
     int *prev;
 };
 
-TYPE_ERROR list_ctor  (LIST *list);
-TYPE_ERROR list_dump  (LIST *list);
-TYPE_ERROR list_verify(LIST *list);
-TYPE_ERROR list_dtor  (LIST *list);
-TYPE_ERROR list_push  (LIST *list, int index, int value);
-TYPE_ERROR list_pop   (LIST *list, int index, int *value);
+Type_Error list_ctor  (List *list);
+Type_Error list_dump  (List *list);
+Type_Error list_verify(List *list);
+Type_Error list_dtor  (List *list);
+Type_Error list_insert(List *list, int index, int value, int *new_index);
+Type_Error list_erase (List *list, int index, int *value);
+Type_Error list_get_el(List *list, int index, int *value);
 
 #endif // LIST_H
