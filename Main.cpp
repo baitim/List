@@ -38,7 +38,7 @@ int main()
         }
     }
 
-    for (int i = 10; i > 7; i--) {
+    for (int i = 10; i > 6; i--) {
         if ((i) % 3 == 2) continue;
         int x = 0;
         err = list_erase(&list, i, &x);
