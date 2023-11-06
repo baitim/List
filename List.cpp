@@ -35,11 +35,13 @@ Type_Error list_ctor(List *list)
     if (!list->next)
         return ERROR_ALLOC_FAIL;
     set_index_next(&list->next, 0, list->capacity);
+    list->next[0] = 0;
 
     list->prev = (int *)calloc(list->capacity, sizeof(int));
     if (!list->prev)
         return ERROR_ALLOC_FAIL;
     set_index_prev(&list->prev, list->capacity);
+    list->prev[0] = 0;
 
     return list_verify(list);
 }
@@ -110,18 +112,18 @@ Type_Error list_verify(List *list)
         if (list->next[i] < 0 || list->next[i] > list->capacity)
         {
             printf("%d\n", list->next[i]);
-            return ERROR_INVALID_INDEX;
+            return ERROR_INVALID_INDEX_NEXT;
         }
     }
 
     for (int i = 1; i < list->capacity; i++)
     {
-        if (list->prev[i] < -2 || list->prev[i] >= list->capacity)
-            return ERROR_INVALID_INDEX;
+        if (list->prev[i] < -2 || list->prev[i] > list->capacity)
+            return ERROR_INVALID_INDEX_PREV;
     }
 
     if (list->fre < 0 || list->fre > list->capacity)
-        return ERROR_INVALID_INDEX;
+        return ERROR_INVALID_INDEX_FRE;
 
     return ERROR_NO;
 }
@@ -219,21 +221,27 @@ static Type_Error list_reduce(List *list, List *new_list)
 Type_Error list_insert(List *list, int index, int value, int *new_index)
 {
     assert(list);
-
     Type_Error err = list_verify(list);
     if (err)
         return err;
 
-    if (list->size + 1 >= list->capacity)
+    while (index >= list->capacity)
         list_increase(list);
+
+    list->size++;
+    if (list->next[0] == list->prev[0])
+        list_increase(list);
+    
+    if (list->fre == 0)
+        list->fre = list->prev[0] + 1;
 
     list->data[list->fre] = value;
     int old_fre = list->fre;
-    list->fre = list->next[list->fre];
+    list->fre = list->next[old_fre];
 
     if (list->prev[index] == -1) {
-        list->next[old_fre] = index + 1;
         list->prev[old_fre] = index - 1;
+        list->next[old_fre] = index + 1;
     } else {
         list->next[old_fre] = list->next[index];
         list->prev[old_fre] = index;
@@ -243,13 +251,14 @@ Type_Error list_insert(List *list, int index, int value, int *new_index)
 
     *new_index = old_fre;
 
-    if (index > list->prev[0])
+    if (index > list->prev[0]) {
+        list->next[list->prev[0]] = old_fre;
         list->prev[0] = index;
+        list->next[list->prev[0]] = 0;
+    }
 
     if (index < list->next[0])
         list->next[0] = index;
-
-    list->size++;
 
     return list_verify(list);
 }
@@ -262,7 +271,7 @@ Type_Error list_erase(List *list, int index, int *value)
     if (err)
         return err;
 
-    if (list->size < list->capacity / 2 && list->capacity > DEFAULT_CAPACITY)
+    if (list->size < list->capacity / 2)
     {
         List new_list = {};
         err = list_reduce(list, &new_list);
@@ -284,10 +293,12 @@ Type_Error list_erase(List *list, int index, int *value)
     *value = list->data[index];
     list->data[index] = POISON_EL;
 
-    if (list->data[list->next[index]] != POISON_EL) {
+    if (list->next[index] == 0) 
+            list->next[list->prev[index]] = 0;
+    else
         list->next[list->prev[index]] = list->next[index];
-        list->prev[list->next[index]] = list->prev[index];
-    }
+
+    list->prev[list->next[index]] = list->prev[index];
 
     if (index == list->next[0])
         list->next[0] = list->next[list->next[0]];
@@ -297,7 +308,7 @@ Type_Error list_erase(List *list, int index, int *value)
 
     int old_fre = list->fre;
     list->fre = index;
-    list->next[list->fre] = old_fre;
+    list->next[list->fre] = old_fre % list->capacity;
     list->prev[list->fre] = -1;
 
     return list_verify(list);
@@ -312,7 +323,7 @@ Type_Error list_get_el(List *list, int index, int *value)
         return err;
 
     if (index < 1 || index > list->capacity)
-        return ERROR_INVALID_INDEX;
+        return ERROR_INVALID_INDEX_NEW_EL;
 
     *value = list->data[index];
 
@@ -323,12 +334,13 @@ static void copy_valid(List *list, List *new_list)
 {
     new_list->data[0] = POISON_EL;
     new_list->next[0] = 1;
+    new_list->prev[0] = list->prev[0];
     int i = list->next[0], j = 1;
 
-    while (i < list->capacity && list->data[i] != POISON_EL)
+    while (list->data[i] != POISON_EL)
     {
         new_list->data[j] = list->data[i];
-        new_list->next[j] = j + 1;
+        new_list->next[j] = (j + 1) % new_list->capacity;
         new_list->prev[j] = MAX(j - 1, -1);
         new_list->prev[0] = j;
         j++;
@@ -347,7 +359,7 @@ static void set_index_next(int **a, int st, int size)
 {
     assert(*a);
     for (int i = 0; i < size; i++)
-        (*a)[i] = i + st + 1;
+        (*a)[i] = (i + st + 1) % (st + size);
 }
 
 static void set_index_prev(int **a, int size)

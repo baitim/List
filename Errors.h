@@ -15,7 +15,10 @@ enum Type_Error {
     ERROR_LIST_CAPACITY =               1 << 4,
     ERROR_LIST_SIZE =                   1 << 5,
     ERROR_LIST_CAPACITY_LESS_SIZE =     1 << 6,
-    ERROR_INVALID_INDEX =               1 << 7,
+    ERROR_INVALID_INDEX_NEXT =          1 << 7,
+    ERROR_INVALID_INDEX_PREV =          1 << 8,
+    ERROR_INVALID_INDEX_FRE =           1 << 9,
+    ERROR_INVALID_INDEX_NEW_EL =        1 << 10,
 };
 
 const Error ERRORS[] = {
@@ -27,7 +30,10 @@ const Error ERRORS[] = {
     {ERROR_LIST_CAPACITY,               "error in list capacity"},
     {ERROR_LIST_SIZE,                   "error in list size"},
     {ERROR_LIST_CAPACITY_LESS_SIZE,     "list capacity less than size"},
-    {ERROR_INVALID_INDEX,               "invalid index in array"},
+    {ERROR_INVALID_INDEX_NEXT,          "invalid index next in array"},
+    {ERROR_INVALID_INDEX_PREV,          "invalid index prev in array"},
+    {ERROR_INVALID_INDEX_FRE,           "invalid index fre in array"},
+    {ERROR_INVALID_INDEX_NEW_EL,        "invalid index new element in array"},
 };
 const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(Error);
 
