@@ -18,6 +18,6 @@ Type_Error list_verify(List *list);
 Type_Error list_dtor  (List *list);
 Type_Error list_insert(List *list, int index, int value, int *new_index);
 Type_Error list_erase (List *list, int index, int *value);
-Type_Error list_get_el(List *list, int index, int *value);
+Type_Error list_get   (List *list, int index, int *value);
 
 #endif // LIST_H

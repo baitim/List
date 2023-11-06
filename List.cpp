@@ -110,10 +110,7 @@ Type_Error list_verify(List *list)
     for (int i = 1; i < list->capacity; i++)
     {
         if (list->next[i] < 0 || list->next[i] > list->capacity)
-        {
-            printf("%d\n", list->next[i]);
             return ERROR_INVALID_INDEX_NEXT;
-        }
     }
 
     for (int i = 1; i < list->capacity; i++)
@@ -314,7 +311,7 @@ Type_Error list_erase(List *list, int index, int *value)
     return list_verify(list);
 }
 
-Type_Error list_get_el(List *list, int index, int *value)
+Type_Error list_get(List *list, int index, int *value)
 {
     assert(list);
 

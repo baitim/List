@@ -36,6 +36,15 @@ int main()
             err_dump(err);
             return err;
         }
+        if (i % 3 == 0) {
+            int value_el = 0;
+            err = list_get(&list, i - 1, &value_el);
+            if (err) {
+                err_dump(err);
+                return err;
+            }
+            printf("Element in %d = %d\n", i - 1, value_el);
+        }
     }
 
     for (int i = 10; i > 6; i--) {
@@ -67,6 +76,22 @@ int main()
             return err;
         }
     }
+
+    int value_el = 0;
+    err = list_get(&list, 7, &value_el);
+    if (err) {
+        err_dump(err);
+        return err;
+        }
+    printf("Element in %d = %d\n", 7, value_el);
+
+    value_el = 0;
+    err = list_get(&list, 9, &value_el);
+    if (err) {
+        err_dump(err);
+        return err;
+        }
+    printf("Element in %d = %d\n", 9, value_el);
 
     for (int i = 10; i <= 11; i++) {
         int new_index = 0;
