@@ -19,6 +19,8 @@ enum Type_Error {
     ERROR_INVALID_INDEX_PREV =          1 << 8,
     ERROR_INVALID_INDEX_FRE =           1 << 9,
     ERROR_INVALID_INDEX_NEW_EL =        1 << 10,
+    ERROR_INVALID_INDEX_DEL_EL =        1 << 11,
+    ERROR_INVALID_LIST =                1 << 12,
 };
 
 const Error ERRORS[] = {
@@ -34,6 +36,8 @@ const Error ERRORS[] = {
     {ERROR_INVALID_INDEX_PREV,          "invalid index prev in array"},
     {ERROR_INVALID_INDEX_FRE,           "invalid index fre in array"},
     {ERROR_INVALID_INDEX_NEW_EL,        "invalid index new element in array"},
+    {ERROR_INVALID_INDEX_DEL_EL,        "invalid index delete element in array"},
+    {ERROR_INVALID_LIST,                "invalid pointer to list"},
 };
 const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(Error);
 

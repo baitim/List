@@ -12,15 +12,16 @@ const double MULTIPLIER_CAPACITY = 2;
 const int POISON_EL = -0xbe;
 
 static Type_Error list_increase(List *list);
-static Type_Error list_reduce(List *list, List *new_list);
-static void copy_valid(List *list, List *new_list);
+static Type_Error list_reduce(List *list, List *new_list, int *index);
+static void copy_valid(List *list, List *new_list, int *index);
 static void set_poison(int **a, int size);
 static void set_index_next(int **a, int st, int size);
 static void set_index_prev(int **a, int size);
 
 Type_Error list_ctor(List *list)
 {
-    assert(list);
+    if (!list)
+        return ERROR_INVALID_LIST;
 
     list->fre = 1;
     list->capacity = DEFAULT_CAPACITY;
@@ -48,7 +49,8 @@ Type_Error list_ctor(List *list)
 
 Type_Error list_dump(List *list)
 {
-    assert(list);
+    if (!list)
+        return ERROR_INVALID_LIST;
 
     Type_Error err = list_verify(list);
     if (err)
@@ -127,7 +129,8 @@ Type_Error list_verify(List *list)
 
 Type_Error list_dtor(List *list)
 {
-    assert(list);
+    if (!list)
+        return ERROR_INVALID_LIST;
 
     int is_empty = list_verify(list);
 
@@ -179,7 +182,7 @@ static Type_Error list_increase(List *list)
     return list_verify(list);
 }
 
-static Type_Error list_reduce(List *list, List *new_list)
+static Type_Error list_reduce(List *list, List *new_list, int *index)
 {
     assert(list);
 
@@ -208,61 +211,62 @@ static Type_Error list_reduce(List *list, List *new_list)
     else
         return ERROR_ALLOC_FAIL;
 
-    copy_valid(list, new_list);
+    copy_valid(list, new_list, index);
     err = list_verify(list);
     if (err)
         return err;
+
     return list_verify(new_list);
 }
 
 Type_Error list_insert(List *list, int index, int value, int *new_index)
 {
-    assert(list);
+    if (!list)
+        return ERROR_INVALID_LIST;
+
     Type_Error err = list_verify(list);
     if (err)
         return err;
 
-    while (index >= list->capacity)
-        list_increase(list);
+    if (index < 0 || index > list->capacity || list->prev[index] == -1)
+        return ERROR_INVALID_INDEX_NEW_EL;
 
     list->size++;
-    if (list->next[0] == list->prev[0])
+
+    err = list_verify(list);
+    if (err)
+        return err;
+
+    while (list->size >= list->capacity)
         list_increase(list);
     
     if (list->fre == 0)
-        list->fre = list->prev[0] + 1;
+        list->fre = list->size;
 
     list->data[list->fre] = value;
     int old_fre = list->fre;
     list->fre = list->next[old_fre];
 
-    if (list->prev[index] == -1) {
-        list->prev[old_fre] = index - 1;
-        list->next[old_fre] = index + 1;
-    } else {
-        list->next[old_fre] = list->next[index];
-        list->prev[old_fre] = index;
-        list->prev[list->next[index]] = old_fre;
-        list->next[index] = old_fre;
-    }
+    list->next[old_fre] = list->next[index];
+    list->prev[old_fre] = index;
+
+    list->prev[list->next[index]] = old_fre;
+    list->next[index] = old_fre;
 
     *new_index = old_fre;
 
-    if (index > list->prev[0]) {
-        list->next[list->prev[0]] = old_fre;
-        list->prev[0] = index;
-        list->next[list->prev[0]] = 0;
+    if (index == list->prev[0]) {
+        list->prev[0] = old_fre;
+        list->next[old_fre] = 0;
     }
-
-    if (index < list->next[0])
-        list->next[0] = index;
 
     return list_verify(list);
 }
 
 Type_Error list_erase(List *list, int index, int *value)
 {
-    assert(list);
+    if (!list)
+        return ERROR_INVALID_LIST;
 
     Type_Error err = list_verify(list);
     if (err)
@@ -271,7 +275,7 @@ Type_Error list_erase(List *list, int index, int *value)
     if (list->size < list->capacity / 2)
     {
         List new_list = {};
-        err = list_reduce(list, &new_list);
+        err = list_reduce(list, &new_list, &index);
         if (err)
             return err;
 
@@ -287,11 +291,20 @@ Type_Error list_erase(List *list, int index, int *value)
 
     list->size--;
 
+    err = list_verify(list);
+    if (err)
+        return err;
+        
+    index = list->next[index];
+
+    if (index <= 0 || index >= list->capacity || list->prev[index] == -1)
+        return ERROR_INVALID_INDEX_DEL_EL;
+
     *value = list->data[index];
     list->data[index] = POISON_EL;
 
     if (list->next[index] == 0) 
-            list->next[list->prev[index]] = 0;
+        list->next[list->prev[index]] = 0;
     else
         list->next[list->prev[index]] = list->next[index];
 
@@ -313,7 +326,8 @@ Type_Error list_erase(List *list, int index, int *value)
 
 Type_Error list_get(List *list, int index, int *value)
 {
-    assert(list);
+   if (!list)
+        return ERROR_INVALID_LIST;
 
     Type_Error err = list_verify(list);
     if (err)
@@ -327,7 +341,7 @@ Type_Error list_get(List *list, int index, int *value)
     return list_verify(list);
 }
 
-static void copy_valid(List *list, List *new_list)
+static void copy_valid(List *list, List *new_list, int *index)
 {
     new_list->data[0] = POISON_EL;
     new_list->next[0] = 1;
@@ -336,6 +350,9 @@ static void copy_valid(List *list, List *new_list)
 
     while (list->data[i] != POISON_EL)
     {
+        if ((*index) == i)
+            *index = j;
+
         new_list->data[j] = list->data[i];
         new_list->next[j] = (j + 1) % new_list->capacity;
         new_list->prev[j] = MAX(j - 1, -1);
@@ -364,4 +381,74 @@ static void set_index_prev(int **a, int size)
     assert(*a);
     for (int i = 0; i < size; i++)
         (*a)[i] = -1;
+}
+
+Type_Error push_back(List *list, int value, int *new_index)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    err = list_insert(list, list->prev[0], value, new_index);
+    if (err)
+        return err;
+
+    return list_verify(list);
+}
+
+Type_Error push_front(List *list, int value, int *new_index)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    err = list_insert(list, 0, value, new_index);
+    if (err)
+        return err;
+
+    return list_verify(list);
+}
+
+Type_Error erase_back(List *list, int *value)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    if (list->prev[0] == 0)
+        return ERROR_INVALID_INDEX_DEL_EL;
+
+    err = list_erase(list, list->prev[list->prev[0]], value);
+    if (err)
+        return err;
+
+    return list_verify(list);
+}
+
+Type_Error erase_front(List *list, int *value)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    if (list->next[0] == 0)
+        return ERROR_INVALID_INDEX_DEL_EL;
+
+    err = list_erase(list, 0, value);
+    if (err)
+        return err;
+
+    return list_verify(list);
 }
