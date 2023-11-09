@@ -10,6 +10,12 @@ int main()
     
     int err = 0;
 
+    FILE *dump_file = fopen("dump.dot", "w");
+    if (!dump_file) {
+        printf("Error open file to dump\n");
+        return 1;
+    }
+
     List list = {};
 
     err = list_ctor(&list);
@@ -226,21 +232,15 @@ int main()
     }
     printf("INDEX element(%d) = %d\n", x, ind);
 
-    FILE *dump_file = fopen("dump.dot", "w");
-    if (!dump_file) {
-        printf("Error open file to dump\n");
-        return 1;
-    }
-
     list_graph_dump(&list, dump_file);
-
-    fclose(dump_file);
 
     err = list_dtor(&list);
     if (err) {
         err_dump(err);
         return err;
     }
+
+    fclose(dump_file);
 
     printf(print_lblue("\nBye\n"));
 
