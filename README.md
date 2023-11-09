@@ -15,7 +15,7 @@
 3. Build & run <br>
     write <code>make</code> in terminal
 
-<p align="center"><img src="https://github.com/baitim/List/blob/main/images/cat.gif" width="50%"></p>
+<p align="center"><img src="https://github.com/baitim/List/blob/main/images/cat.gif" width="30%"></p>
 
 ## Feats
 
