@@ -402,6 +402,31 @@ Type_Error list_get(List *list, int index, int *value)
     return list_verify(list);
 }
 
+Type_Error list_get_index(List *list, int value, int *index)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    int ind = list->next[0];
+    *index = -1;
+
+    while (ind != 0) {
+
+        if (list->data[ind] == value) {
+            *index = ind;
+            break;
+        }
+
+        ind = list->next[ind];
+    }
+
+    return list_verify(list);
+}
+
 static void copy_valid(List *list, List *new_list, int *index)
 {
     new_list->data[0] = POISON_EL;

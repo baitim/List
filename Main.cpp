@@ -217,6 +217,15 @@ int main()
         }
     }
 
+    int x = 60;
+    int ind = 0;
+    err = list_get_index(&list, x, &ind);
+    if (err) {
+        err_dump(err);
+        return err;
+    }
+    printf("INDEX element(%d) = %d\n", x, ind);
+
     FILE *dump_file = fopen("dump.dot", "w");
     if (!dump_file) {
         printf("Error open file to dump\n");

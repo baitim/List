@@ -22,6 +22,7 @@ Type_Error list_dtor        (List *list);
 Type_Error list_insert      (List *list, int index, int value, int *new_index);
 Type_Error list_erase       (List *list, int index, int *value);
 Type_Error list_get         (List *list, int index, int *value);
+Type_Error list_get_index   (List *list, int value, int *index);
 Type_Error push_back        (List *list, int value, int *new_index);
 Type_Error push_front       (List *list, int value, int *new_index);
 Type_Error erase_back       (List *list, int *value);
