@@ -47,7 +47,7 @@ Type_Error list_ctor(List *list)
     return list_verify(list);
 }
 
-Type_Error list_dump(List *list)
+Type_Error list_cmd_dump(List *list)
 {
     if (!list)
         return ERROR_INVALID_LIST;
@@ -87,6 +87,69 @@ Type_Error list_dump(List *list)
     for (int i = 0; i < list->capacity * (int)sizeof(double); i++)
         printf("^");
     printf("\n");
+
+    return list_verify(list);
+}
+
+Type_Error list_graph_dump(List *list, FILE *dump_file)
+{
+    if (!list)
+        return ERROR_INVALID_LIST;
+
+    if (!dump_file)
+        return ERROR_INVALID_FILE;
+
+    Type_Error err = list_verify(list);
+    if (err)
+        return err;
+
+    fprintf(dump_file, "digraph {\n");
+    fprintf(dump_file, "\tgraph[label = \"List\", labelloc = top, ");
+    fprintf(dump_file, "labeljust = center, fontsize = 70, fontcolor = \"#e33e19\"];\n");
+    fprintf(dump_file, "\tgraph[dpi = 200];\n");
+	fprintf(dump_file, "\tsplines = ortho;\n");
+    fprintf(dump_file, "\tbgcolor = \"#2F353B\"\n");
+    fprintf(dump_file, "\tedge[minlen = 3, penwidth = 2.5];\n");
+
+    fprintf(dump_file, "\tnode[shape = \"rectangle\", style = \"rounded, filled\", height = 3, width = 2, ");
+	fprintf(dump_file, "fillcolor = \"#ab5b0f\", fontsize = 30, penwidth = 3.5, color = \"#941b1b\"]\n");
+
+    fprintf(dump_file, "\t{ rank = same;\n");
+    fprintf(dump_file, "\t\tnode[shape = \"Mrecord\"];\n");
+    for (int i = 1; i < list->capacity; i++) {
+        fprintf(dump_file, "\t\tnode%d[label = \"{ %d | %d | %d | %d }\"",
+                            i, i, list->data[i], list->next[i], list->prev[i]);
+        if (list->prev[i] == -1)
+            fprintf(dump_file, ", fillcolor = \"#e3964d\"");
+        fprintf(dump_file, "];\n");
+    }
+    fprintf(dump_file, "\t}\n");
+
+    fprintf(dump_file, "\t{ rank = min;\n");
+    fprintf(dump_file, "\t\tnode[shape = \"Mrecord\"];\n");
+    fprintf(dump_file, "\t\tnode%d[label = \"{ %d | %d | %d | %d }\"];\n",
+                            0, 0, list->data[0], list->next[0], list->prev[0]);
+    fprintf(dump_file, "\t}\n");
+
+    fprintf(dump_file, "\t{ rank = max;\n");
+    fprintf(dump_file, "\t\tnode_free[label = \"free\"];\n");
+    fprintf(dump_file, "\t}\n");
+
+    fprintf(dump_file, "\tnode_free->node%d [color = orange];\n", list->fre);
+
+    for (int i = 0; i < list->capacity - 1; i++) {
+        fprintf(dump_file, "\tnode%d->node%d[weight = 100, style = invis];\n",
+                            i, i + 1);
+    }
+
+    for (int i = 0; i < list->capacity; i++) {
+        fprintf(dump_file, "\tnode%d->node%d[color = yellow];\n",
+                            i, list->next[i]);
+    }
+
+    //fprintf(dump_file, "");
+
+    fprintf(dump_file, "}\n");
 
     return list_verify(list);
 }

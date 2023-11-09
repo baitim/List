@@ -18,7 +18,7 @@ int main()
         return err;
     }
 
-    err = list_dump(&list);
+    err = list_cmd_dump(&list);
     if (err) {
         err_dump(err);
         return err;
@@ -31,7 +31,7 @@ int main()
             err_dump(err);
             return err;
         }
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -56,7 +56,7 @@ int main()
             return err;
         }
         printf("POPED ELEMENT = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -87,7 +87,7 @@ int main()
             return err;
         }
         printf("POPED ELEMENT = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -102,7 +102,7 @@ int main()
             return err;
         }
         printf("POPED ELEMENT = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -118,7 +118,7 @@ int main()
             return err;
         }
         printf("FRONT NEW INDEX = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -134,7 +134,7 @@ int main()
             return err;
         }
         printf("BACK NEW INDEX = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -151,7 +151,7 @@ int main()
                 return err;
             }
             printf("FRONT POPED ELEMENT = %d\n", x);
-            err = list_dump(&list);
+            err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
                 return err;
@@ -164,7 +164,7 @@ int main()
                 return err;
             }
             printf("BACK POPED ELEMENT = %d\n", x);
-            err = list_dump(&list);
+            err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
                 return err;
@@ -180,7 +180,7 @@ int main()
             return err;
         }
         printf("BACK POPED ELEMENT = %d\n", x);
-        err = list_dump(&list);
+        err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
             return err;
@@ -196,7 +196,7 @@ int main()
                 return err;
             }
             printf("FRONT NEW INDEX = %d\n", x);
-            err = list_dump(&list);
+            err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
                 return err;
@@ -209,13 +209,23 @@ int main()
                 return err;
             }
             printf("BACK NEW INDEX = %d\n", x);
-            err = list_dump(&list);
+            err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
                 return err;
             }
         }
     }
+
+    FILE *dump_file = fopen("dump.dot", "w");
+    if (!dump_file) {
+        printf("Error open file to dump\n");
+        return 1;
+    }
+
+    list_graph_dump(&list, dump_file);
+
+    fclose(dump_file);
 
     err = list_dtor(&list);
     if (err) {

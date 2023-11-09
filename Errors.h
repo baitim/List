@@ -21,6 +21,7 @@ enum Type_Error {
     ERROR_INVALID_INDEX_NEW_EL =        1 << 10,
     ERROR_INVALID_INDEX_DEL_EL =        1 << 11,
     ERROR_INVALID_LIST =                1 << 12,
+    ERROR_INVALID_FILE =                1 << 13,
 };
 
 const Error ERRORS[] = {
@@ -38,6 +39,7 @@ const Error ERRORS[] = {
     {ERROR_INVALID_INDEX_NEW_EL,        "invalid index new element in array"},
     {ERROR_INVALID_INDEX_DEL_EL,        "invalid index delete element in array"},
     {ERROR_INVALID_LIST,                "invalid pointer to list"},
+    {ERROR_INVALID_FILE,                "invalid name of file"},
 };
 const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(Error);
 
