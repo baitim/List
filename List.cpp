@@ -147,8 +147,6 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
                             i, list->next[i]);
     }
 
-    //fprintf(dump_file, "");
-
     fprintf(dump_file, "}\n");
 
     return list_verify(list);
