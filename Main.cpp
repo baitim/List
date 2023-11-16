@@ -214,8 +214,7 @@ int main()
         }
     }
 
-    list_graph_dump(&list,
-     dump_file);
+    list_graph_dump(&list, dump_file);
 
     err = list_dtor(&list);
     if (err) {
