@@ -34,5 +34,9 @@
     * <code> erase_front        </code>
     * <code> list_get_index     </code>
 
+## Example
+
+<p align="center"><img src="https://github.com/baitim/List/blob/main/images/dump.png" width="60%"></p>
+
 ## Support
 **This project is created by [bai_tim](https://github.com/bai_tim)**

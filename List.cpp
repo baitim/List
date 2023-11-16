@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 
 #include "List.h"
 
@@ -9,16 +10,16 @@
 const int DEFAULT_SIZE = 0;
 const int DEFAULT_CAPACITY = 1;
 const double MULTIPLIER_CAPACITY = 2;
-const int POISON_EL = -0xbe;
+const int POISON_INT = 0xbe;
 
-static Type_Error list_increase(List *list);
-static Type_Error list_reduce(List *list, List *new_list, int *index);
+static TypeError list_increase(List *list);
+static TypeError list_reduce(List *list, List *new_list, int *index);
 static void copy_valid(List *list, List *new_list, int *index);
-static void set_poison(int **a, int size);
-static void set_index_next(int **a, int st, int size);
-static void set_index_prev(int **a, int size);
+static void set_poison(type_el *a, int size);
+static void set_index_next(int *a, int st, int size);
+static void set_index_prev(int *a, int size);
 
-Type_Error list_ctor(List *list)
+TypeError list_ctor(List *list)
 {
     if (!list)
         return ERROR_INVALID_LIST;
@@ -27,32 +28,32 @@ Type_Error list_ctor(List *list)
     list->capacity = DEFAULT_CAPACITY;
     list->size = DEFAULT_SIZE;
 
-    list->data = (int *)calloc(list->capacity, sizeof(int));
+    list->data = (type_el *)calloc(list->capacity, sizeof(type_el));
     if (!list->data)
         return ERROR_ALLOC_FAIL;
-    set_poison(&list->data, list->capacity);
+    set_poison(list->data, list->capacity);
 
     list->next = (int *)calloc(list->capacity, sizeof(int));
     if (!list->next)
         return ERROR_ALLOC_FAIL;
-    set_index_next(&list->next, 0, list->capacity);
+    set_index_next(list->next, 0, list->capacity);
     list->next[0] = 0;
 
     list->prev = (int *)calloc(list->capacity, sizeof(int));
     if (!list->prev)
         return ERROR_ALLOC_FAIL;
-    set_index_prev(&list->prev, list->capacity);
+    set_index_prev(list->prev, list->capacity);
     list->prev[0] = 0;
 
     return list_verify(list);
 }
 
-Type_Error list_cmd_dump(List *list)
+TypeError list_cmd_dump(List *list)
 {
     if (!list)
         return ERROR_INVALID_LIST;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
@@ -64,23 +65,19 @@ Type_Error list_cmd_dump(List *list)
     printf("SIZ = %d\n", list->size);
     printf("CAP = %d\n", list->capacity);
 
-    for (int i = 0; i < list->capacity; i++)
-    {
+    for (int i = 0; i < list->capacity; i++) {
         printf("%d\t", i);
     }
     printf("\n");
-    for (int i = 0; i < list->capacity; i++)
-    {
-        printf("%d\t", list->data[i]);
+    for (int i = 0; i < list->capacity; i++) {
+        print_el(&list->data[i]);
     }
     printf("\n");
-    for (int i = 0; i < list->capacity; i++)
-    {
+    for (int i = 0; i < list->capacity; i++) {
         printf("%d\t", list->next[i]);
     }
     printf("\n");
-    for (int i = 0; i < list->capacity; i++)
-    {
+    for (int i = 0; i < list->capacity; i++) {
         printf("%d\t", list->prev[i]);
     }
     printf("\n");
@@ -91,7 +88,16 @@ Type_Error list_cmd_dump(List *list)
     return list_verify(list);
 }
 
-Type_Error list_graph_dump(List *list, FILE *dump_file)
+// enum GraphvizNodeShape
+// {
+// };
+// struct GraphvizNode
+// {
+//     const char* label;
+//     GraphvizNodeShape shape;
+// }
+
+TypeError list_graph_dump(List *list, FILE *dump_file)
 {
     if (!list)
         return ERROR_INVALID_LIST;
@@ -99,17 +105,17 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
     if (!dump_file)
         return ERROR_INVALID_FILE;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
-    fprintf(dump_file, "digraph {\n");
-    fprintf(dump_file, "\tgraph[label = \"List\", labelloc = top, ");
-    fprintf(dump_file, "labeljust = center, fontsize = 70, fontcolor = \"#e33e19\"];\n");
-    fprintf(dump_file, "\tgraph[dpi = 200];\n");
-	fprintf(dump_file, "\tsplines = ortho;\n");
-    fprintf(dump_file, "\tbgcolor = \"#2F353B\"\n");
-    fprintf(dump_file, "\tedge[minlen = 3, penwidth = 3];\n");
+    fprintf(dump_file, "digraph {\n"
+                       "\tgraph[label = \"List\", labelloc = top, "
+                       "labeljust = center, fontsize = 70, fontcolor = \"#e33e19\"];\n"
+                       "\tgraph[dpi = 200];\n"
+	                   "\tsplines = ortho;\n"
+                       "\tbgcolor = \"#2F353B\"\n"
+                       "\tedge[minlen = 3, penwidth = 3];\n");
 
     fprintf(dump_file, "\tnode[shape = \"rectangle\", style = \"rounded, filled\", height = 3, width = 2, ");
 	fprintf(dump_file, "fillcolor = \"#ab5b0f\", fontsize = 30, penwidth = 3.5, color = \"#941b1b\"]\n");
@@ -117,8 +123,9 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
     fprintf(dump_file, "\t{ rank = same;\n");
     fprintf(dump_file, "\t\tnode[shape = \"Mrecord\"];\n");
     for (int i = 1; i < list->capacity; i++) {
-        fprintf(dump_file, "\t\tnode%d[label = \"{ %d | %d | %d | %d }\"",
-                            i, i, list->data[i], list->next[i], list->prev[i]);
+        fprintf(dump_file, "\t\tnode%d[label = \"{ id %d | ", i, i);
+        print_dump_el(&list->data[i], dump_file);
+        fprintf(dump_file, " | next %d | prev %d }\"", list->next[i], list->prev[i]);
         if (list->prev[i] == -1)
             fprintf(dump_file, ", fillcolor = \"#e3964d\"");
         fprintf(dump_file, "];\n");
@@ -127,8 +134,9 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
 
     fprintf(dump_file, "\t{ rank = min;\n");
     fprintf(dump_file, "\t\tnode[shape = \"Mrecord\"];\n");
-    fprintf(dump_file, "\t\tnode%d[label = \"{ %d | %d | %d | %d }\", fillcolor = \"#bf9732\"];\n",
-                        0, 0, list->data[0], list->next[0], list->prev[0]);
+    fprintf(dump_file, "\t\tnode0[label = \"{ id 0 | ");
+    print_dump_el(&list->data[0], dump_file);
+    fprintf(dump_file, " | next %d | prev %d }\", fillcolor = \"#bf9732\"];\n", list->next[0], list->prev[0]);
     fprintf(dump_file, "\t}\n");
 
     fprintf(dump_file, "\t{ rank = max;\n");
@@ -142,10 +150,12 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
     }
 
     for (int i = 0; i < list->capacity; i++) {
-        if (list->prev[i] == -1)
+        if (list->prev[i] == -1) {
             fprintf(dump_file, "\tnode%d->node%d[color = \"#cf3000\"];\n", i, list->next[i]);
-        else
+        } else {
             fprintf(dump_file, "\tnode%d->node%d[color = yellow];\n", i, list->next[i]);
+            fprintf(dump_file, "\tnode%d->node%d[color = \"#fada69\"];\n", list->next[i], i);
+        }
     }
 
     fprintf(dump_file, "}\n");
@@ -153,7 +163,7 @@ Type_Error list_graph_dump(List *list, FILE *dump_file)
     return list_verify(list);
 }
 
-Type_Error list_verify(List *list)
+TypeError list_verify(List *list)
 {
     assert(list);
 
@@ -170,6 +180,23 @@ Type_Error list_verify(List *list)
         return ERROR_LIST_CAPACITY;
     if (list->capacity < list->size)
         return ERROR_LIST_CAPACITY_LESS_SIZE;
+
+    int *color = (int *)calloc(list->capacity, sizeof(int));
+    if (!color)
+        return ERROR_ALLOC_FAIL;
+
+    int ind = 0;
+    int count = 0;
+    while (list->next[ind] != 0) {
+        color[ind] = 1;
+        if (color[list->next[ind]])
+            return ERROR_LIST_LOOP;
+
+        ind = list->next[ind];
+        count++;
+    }
+    if (count != list->size)
+        return ERROR_VALID_COUNT;
 
     for (int i = 1; i < list->capacity; i++)
     {
@@ -189,30 +216,31 @@ Type_Error list_verify(List *list)
     return ERROR_NO;
 }
 
-Type_Error list_dtor(List *list)
+TypeError list_dtor(List *list)
 {
     if (!list)
         return ERROR_INVALID_LIST;
 
-    int is_empty = list_verify(list);
+    TypeError err = list_verify(list);
 
-    list->fre = POISON_EL;
-    list->capacity = POISON_EL;
-    list->size = POISON_EL;
+    list->fre = POISON_INT;
+    list->capacity = POISON_INT;
+    list->size = POISON_INT;
     free(list->data);
     free(list->next);
     free(list->prev);
+    list->data = nullptr;
+    list->next = nullptr;
+    list->prev = nullptr;
 
-    if (is_empty)
-        return ERROR_DTOR_EMPTY_LIST;
-    return ERROR_NO;
+    return err;
 }
 
-static Type_Error list_increase(List *list)
+static TypeError list_increase(List *list)
 {
     assert(list);
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
@@ -220,57 +248,54 @@ static Type_Error list_increase(List *list)
     list->capacity = (int)(list->capacity * MULTIPLIER_CAPACITY);
     int new_capacity = list->capacity;
 
-    list->data = (int *)realloc(list->data, list->capacity * sizeof(int));
+    list->data = (type_el *)realloc(list->data, list->capacity * sizeof(type_el));
     if (!list->data)
         return ERROR_ALLOC_FAIL;
     list->data += old_capacity;
-    set_poison(&list->data, new_capacity - old_capacity);
+    set_poison(list->data, new_capacity - old_capacity);
     list->data -= old_capacity;
 
     list->next = (int *)realloc(list->next, list->capacity * sizeof(int));
     if (!list->next)
         return ERROR_ALLOC_FAIL;
     list->next += old_capacity;
-    set_index_next(&list->next, old_capacity, new_capacity - old_capacity);
+    set_index_next(list->next, old_capacity, new_capacity - old_capacity);
     list->next -= old_capacity;
 
     list->prev = (int *)realloc(list->prev, list->capacity * sizeof(int));
     if (!list->prev)
         return ERROR_ALLOC_FAIL;
     list->prev += old_capacity;
-    set_index_prev(&list->prev, new_capacity - old_capacity);
+    set_index_prev(list->prev, new_capacity - old_capacity);
     list->prev -= old_capacity;
+
+    if (list->fre == 0)
+        list->fre = list->size + 1;
 
     return list_verify(list);
 }
 
-static Type_Error list_reduce(List *list, List *new_list, int *index)
+static TypeError list_reduce(List *list, List *new_list, int *index)
 {
     assert(list);
 
-    Type_Error err = ERROR_NO;
+    TypeError err = ERROR_NO;
     list_ctor(new_list);
 
     new_list->capacity = (int)(list->capacity / MULTIPLIER_CAPACITY);
     new_list->size = list->size;
     new_list->fre = new_list->capacity;
 
-    int *tmp = (int *)calloc(new_list->capacity + 1, sizeof(int));
-    if (tmp != NULL)
-        new_list->data = tmp;
-    else
+    new_list->data = (type_el *)calloc(new_list->capacity + 1, sizeof(type_el));
+    if (!new_list->data)
         return ERROR_ALLOC_FAIL;
 
-    tmp = (int *)calloc(new_list->capacity + 1, sizeof(int));
-    if (tmp != NULL)
-        new_list->next = tmp;
-    else
+    new_list->next = (int *)calloc(new_list->capacity + 1, sizeof(int));
+    if (!new_list->next)
         return ERROR_ALLOC_FAIL;
 
-    tmp = (int *)calloc(new_list->capacity + 1, sizeof(int));
-    if (tmp != NULL)
-        new_list->prev = tmp;
-    else
+    new_list->prev = (int *)calloc(new_list->capacity + 1, sizeof(int));
+    if (!new_list->prev)
         return ERROR_ALLOC_FAIL;
 
     copy_valid(list, new_list, index);
@@ -281,31 +306,24 @@ static Type_Error list_reduce(List *list, List *new_list, int *index)
     return list_verify(new_list);
 }
 
-Type_Error list_insert(List *list, int index, int value, int *new_index)
+TypeError list_insert(List *list, int index, type_el value, int *new_index)
 {
     if (!list)
         return ERROR_INVALID_LIST;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
     if (index < 0 || index > list->capacity || list->prev[index] == -1)
         return ERROR_INVALID_INDEX_NEW_EL;
 
+    if (list->size >= list->capacity - 1)
+        list_increase(list);
+
     list->size++;
 
-    err = list_verify(list);
-    if (err)
-        return err;
-
-    while (list->size >= list->capacity)
-        list_increase(list);
-    
-    if (list->fre == 0)
-        list->fre = list->size;
-
-    list->data[list->fre] = value;
+    memcpy(&list->data[list->fre], &value, sizeof(type_el));
     int old_fre = list->fre;
     list->fre = list->next[old_fre];
 
@@ -317,20 +335,15 @@ Type_Error list_insert(List *list, int index, int value, int *new_index)
 
     *new_index = old_fre;
 
-    if (index == list->prev[0]) {
-        list->prev[0] = old_fre;
-        list->next[old_fre] = 0;
-    }
-
     return list_verify(list);
 }
 
-Type_Error list_erase(List *list, int index, int *value)
+TypeError list_erase(List *list, int index, type_el *value)
 {
     if (!list)
         return ERROR_INVALID_LIST;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
@@ -352,31 +365,17 @@ Type_Error list_erase(List *list, int index, int *value)
     }
 
     list->size--;
-
-    err = list_verify(list);
-    if (err)
-        return err;
         
     index = list->next[index];
 
     if (index <= 0 || index >= list->capacity || list->prev[index] == -1)
         return ERROR_INVALID_INDEX_DEL_EL;
 
-    *value = list->data[index];
-    list->data[index] = POISON_EL;
+    memcpy(&value, &list->data[index], sizeof(type_el));
+    memcpy(&list->data[index], &POISON_EL, sizeof(type_el));
 
-    if (list->next[index] == 0) 
-        list->next[list->prev[index]] = 0;
-    else
-        list->next[list->prev[index]] = list->next[index];
-
+    list->next[list->prev[index]] = list->next[index];
     list->prev[list->next[index]] = list->prev[index];
-
-    if (index == list->next[0])
-        list->next[0] = list->next[list->next[0]];
-
-    if (index == list->prev[0])
-        list->prev[0] = list->prev[list->prev[0]];
 
     int old_fre = list->fre;
     list->fre = index;
@@ -386,29 +385,29 @@ Type_Error list_erase(List *list, int index, int *value)
     return list_verify(list);
 }
 
-Type_Error list_get(List *list, int index, int *value)
+TypeError list_get(List *list, int index, type_el *value)
 {
    if (!list)
         return ERROR_INVALID_LIST;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
     if (index < 1 || index > list->capacity)
         return ERROR_INVALID_INDEX_NEW_EL;
 
-    *value = list->data[index];
+    memcpy(value, &list->data[index], sizeof(type_el));
 
     return list_verify(list);
 }
 
-Type_Error list_get_index(List *list, int value, int *index)
+TypeError list_get_index(List *list, type_el value, int *index)
 {
     if (!list)
         return ERROR_INVALID_LIST;
 
-    Type_Error err = list_verify(list);
+    TypeError err = list_verify(list);
     if (err)
         return err;
 
@@ -417,7 +416,7 @@ Type_Error list_get_index(List *list, int value, int *index)
 
     while (ind != 0) {
 
-        if (list->data[ind] == value) {
+        if (el_cmp(&list->data[ind], &value)) {
             *index = ind;
             break;
         }
@@ -430,17 +429,17 @@ Type_Error list_get_index(List *list, int value, int *index)
 
 static void copy_valid(List *list, List *new_list, int *index)
 {
-    new_list->data[0] = POISON_EL;
+    memcpy(&new_list->data[0], &POISON_EL, sizeof(type_el));
     new_list->next[0] = 1;
     new_list->prev[0] = list->prev[0];
     int i = list->next[0], j = 1;
 
-    while (list->data[i] != POISON_EL)
+    while (!el_cmp(&list->data[i], &POISON_EL))
     {
         if ((*index) == i)
             *index = j;
 
-        new_list->data[j] = list->data[i];
+        memcpy(&new_list->data[j], &list->data[i], sizeof(type_el));
         new_list->next[j] = (j + 1) % new_list->capacity;
         new_list->prev[j] = MAX(j - 1, -1);
         new_list->prev[0] = j;
@@ -449,93 +448,43 @@ static void copy_valid(List *list, List *new_list, int *index)
     }
 }
 
-static void set_poison(int **a, int size)
+static void set_poison(type_el *a, int size)
 {
-    assert(*a);
+    assert(a);
     for (int i = 0; i < size; i++)
-        (*a)[i] = POISON_EL;
+        memcpy(&a[i], &POISON_EL, sizeof(type_el));
 }
 
-static void set_index_next(int **a, int st, int size)
+static void set_index_next(int *a, int st, int size)
 {
-    assert(*a);
+    assert(a);
     for (int i = 0; i < size; i++)
-        (*a)[i] = (i + st + 1) % (st + size);
+        a[i] = (i + st + 1) % (st + size);
 }
 
-static void set_index_prev(int **a, int size)
+static void set_index_prev(int *a, int size)
 {
-    assert(*a);
+    assert(a);
     for (int i = 0; i < size; i++)
-        (*a)[i] = -1;
+        a[i] = -1;
 }
 
-Type_Error push_back(List *list, int value, int *new_index)
+TypeError list_push_back(List *list, type_el value, int *new_index)
 {
-    if (!list)
-        return ERROR_INVALID_LIST;
-
-    Type_Error err = list_verify(list);
-    if (err)
-        return err;
-
-    err = list_insert(list, list->prev[0], value, new_index);
-    if (err)
-        return err;
-
-    return list_verify(list);
+    return list_insert(list, list->prev[0], value, new_index);
 }
 
-Type_Error push_front(List *list, int value, int *new_index)
+TypeError list_push_front(List *list, type_el value, int *new_index)
 {
-    if (!list)
-        return ERROR_INVALID_LIST;
-
-    Type_Error err = list_verify(list);
-    if (err)
-        return err;
-
-    err = list_insert(list, 0, value, new_index);
-    if (err)
-        return err;
-
-    return list_verify(list);
+    return list_insert(list, 0, value, new_index);
 }
 
-Type_Error erase_back(List *list, int *value)
+TypeError list_erase_back(List *list, type_el *value)
 {
-    if (!list)
-        return ERROR_INVALID_LIST;
-
-    Type_Error err = list_verify(list);
-    if (err)
-        return err;
-
-    if (list->prev[0] == 0)
-        return ERROR_INVALID_INDEX_DEL_EL;
-
-    err = list_erase(list, list->prev[list->prev[0]], value);
-    if (err)
-        return err;
-
-    return list_verify(list);
+    return list_erase(list, list->prev[list->prev[0]], value);
 }
 
-Type_Error erase_front(List *list, int *value)
+TypeError list_erase_front(List *list, type_el *value)
 {
-    if (!list)
-        return ERROR_INVALID_LIST;
-
-    Type_Error err = list_verify(list);
-    if (err)
-        return err;
-
-    if (list->next[0] == 0)
-        return ERROR_INVALID_INDEX_DEL_EL;
-
-    err = list_erase(list, 0, value);
-    if (err)
-        return err;
-
-    return list_verify(list);
+    return list_erase(list, 0, value);
 }

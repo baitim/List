@@ -32,7 +32,7 @@ int main()
 
     for (int i = 0; i <= 10; i++) {
         int new_index = 0;
-        err = list_insert(&list, i, i + 10, &new_index);
+        err = list_insert(&list, i, {"che", i}, &new_index);
         if (err) {
             err_dump(err);
             return err;
@@ -43,25 +43,27 @@ int main()
             return err;
         }
         if (i % 3 == 2) {
-            int value_el = 0;
+            type_el value_el = {"che", i + 10};
             err = list_get(&list, i - 1, &value_el);
             if (err) {
                 err_dump(err);
                 return err;
             }
-            printf("Element in %d = %d\n", i - 1, value_el);
+            printf("Element in %d = \n", i - 1);
+            print_el(&value_el);
         }
     }
 
     for (int i = 10; i > 6; i--) {
         if ((i) % 3 == 2) continue;
-        int x = 0;
+        type_el x = {};
         err = list_erase(&list, i, &x);
         if (err) {
             err_dump(err);
             return err;
         }
-        printf("POPED ELEMENT = %d\n", x);
+        printf("POPED ELEMENT = \n");
+        print_el(&x);
         err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
@@ -69,30 +71,15 @@ int main()
         }
     }
 
-    int value_el = 0;
-    err = list_get(&list, 7, &value_el);
-    if (err) {
-        err_dump(err);
-        return err;
-        }
-    printf("Element in %d = %d\n", 7, value_el);
-
-    value_el = 0;
-    err = list_get(&list, 9, &value_el);
-    if (err) {
-        err_dump(err);
-        return err;
-        }
-    printf("Element in %d = %d\n", 9, value_el);
-
     for (int i = 2; i >= 0; i--) {
-        int x = 0;
+        type_el x = {};
         err = list_erase(&list, i, &x);
         if (err) {
             err_dump(err);
             return err;
         }
-        printf("POPED ELEMENT = %d\n", x);
+        printf("POPED ELEMENT = \n");
+        print_el(&x);
         err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
@@ -101,13 +88,14 @@ int main()
     }
 
     for (int i = 4; i >= 3; i--) {
-        int x = 0;
+        type_el x = {};
         err = list_erase(&list, i, &x);
         if (err) {
             err_dump(err);
             return err;
         }
-        printf("POPED ELEMENT = %d\n", x);
+        printf("POPED ELEMENT = \n");
+        print_el(&x);
         err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
@@ -118,7 +106,7 @@ int main()
     for (int i = 0; i <= 5; i++) {
         if ((i) % 3 == 1) continue;
         int x = 0;
-        err = push_front(&list, i + 20, &x);
+        err = list_push_front(&list, {"angem", i + 20}, &x);
         if (err) {
             err_dump(err);
             return err;
@@ -134,7 +122,7 @@ int main()
     for (int i = 0; i <= 4; i++) {
         if ((i) % 3 == 1) continue;
         int x = 0;
-        err = push_back(&list, i + 30, &x);
+        err = list_push_back(&list, {"discra", i + 30}, &x);
         if (err) {
             err_dump(err);
             return err;
@@ -150,26 +138,28 @@ int main()
     for (int i = 0; i < 4; i++) {
         printf("\ni = %d\n", i);
         if ((i) % 2 == 0) {
-            int x = 0;
-            err = erase_front(&list, &x);
+            type_el x = {};
+            err = list_erase_front(&list, &x);
             if (err) {
                 err_dump(err);
                 return err;
             }
-            printf("FRONT POPED ELEMENT = %d\n", x);
+            printf("FRONT POPED ELEMENT = \n");
+            print_el(&x);
             err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
                 return err;
             }
         } else {
-            int x = 0;
-            err = erase_back(&list, &x);
+            type_el x = {};
+            err = list_erase_back(&list, &x);
             if (err) {
                 err_dump(err);
                 return err;
             }
-            printf("BACK POPED ELEMENT = %d\n", x);
+            printf("BACK POPED ELEMENT = \n");
+            print_el(&x);
             err = list_cmd_dump(&list);
             if (err) {
                 err_dump(err);
@@ -179,13 +169,14 @@ int main()
     }
 
     for (int i = 0; i < 6; i++) {
-        int x = 0;
-        err = erase_back(&list, &x);
+        type_el x = {};
+        err = list_erase_back(&list, &x);
         if (err) {
             err_dump(err);
             return err;
         }
-        printf("BACK POPED ELEMENT = %d\n", x);
+        printf("BACK POPED ELEMENT = \n");
+        print_el(&x);
         err = list_cmd_dump(&list);
         if (err) {
             err_dump(err);
@@ -196,7 +187,7 @@ int main()
     for (int i = 0; i <= 3; i++) {
         if ((i) % 2 == 0) {
             int x = 0;
-            err = push_front(&list, i + 60, &x);
+            err = list_push_front(&list, {"obchesos", i + 40}, &x);
             if (err) {
                 err_dump(err);
                 return err;
@@ -209,7 +200,7 @@ int main()
             }
         } else {
             int x = 0;
-            err = push_back(&list, i + 70, &x);
+            err = list_push_back(&list, {"proga", i + 50}, &x);
             if (err) {
                 err_dump(err);
                 return err;
@@ -223,16 +214,8 @@ int main()
         }
     }
 
-    int x = 60;
-    int ind = 0;
-    err = list_get_index(&list, x, &ind);
-    if (err) {
-        err_dump(err);
-        return err;
-    }
-    printf("INDEX element(%d) = %d\n", x, ind);
-
-    list_graph_dump(&list, dump_file);
+    list_graph_dump(&list,
+     dump_file);
 
     err = list_dtor(&list);
     if (err) {
