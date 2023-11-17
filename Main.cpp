@@ -9,12 +9,7 @@ int main()
                        "# (c) BAIDUSENOV TIMUR, 2023\n\n"));
     
     int err = 0;
-
-    FILE *dump_file = fopen("dump.dot", "w");
-    if (!dump_file) {
-        printf("Error open file to dump\n");
-        return 1;
-    }
+    int number_grpah_dump = 1;
 
     List list = {};
 
@@ -51,6 +46,11 @@ int main()
             }
             printf("Element in %d = \n", i - 1);
             print_el(&value_el);
+        }
+        err = list_graph_dump(&list, &number_grpah_dump);
+        if (err) {
+            err_dump(err);
+            return err;
         }
     }
 
@@ -214,7 +214,11 @@ int main()
         }
     }
 
-    list_graph_dump(&list, dump_file);
+    err = list_graph_dump(&list, &number_grpah_dump);
+    if (err) {
+        err_dump(err);
+        return err;
+    }
 
     err = list_dtor(&list);
     if (err) {
@@ -222,7 +226,11 @@ int main()
         return err;
     }
 
-    fclose(dump_file);
+    err = list_html_dump(number_grpah_dump);
+    if (err) {
+        err_dump(err);
+        return err;
+    }
 
     printf(print_lblue("\nBye\n"));
 

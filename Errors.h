@@ -23,6 +23,8 @@ enum TypeError {
     ERROR_INVALID_FILE =                1 << 12,
     ERROR_LIST_LOOP =                   1 << 13,
     ERROR_VALID_COUNT =                 1 << 14,
+    ERROR_OPEN_FILE =                   1 << 15,
+    ERROR_SYSTEM_COMMAND =              1 << 16,
 };
 
 const Error ERRORS[] = {
@@ -42,6 +44,8 @@ const Error ERRORS[] = {
     {ERROR_INVALID_FILE,                "invalid name of file"},
     {ERROR_LIST_LOOP,                   "list has loop"},
     {ERROR_VALID_COUNT,                 "list has invalid count of elements"},
+    {ERROR_OPEN_FILE,                   "cannot open file"},
+    {ERROR_SYSTEM_COMMAND,              "cannot process system command"},
 };
 const int COUNT_ERRORS = sizeof(ERRORS) / sizeof(Error);
 

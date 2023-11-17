@@ -7,7 +7,7 @@
 #include "Config.h"
 
 struct List {
-    int fre;
+    int free;
     int capacity;
     int size;
     type_el *data;
@@ -17,7 +17,8 @@ struct List {
 
 TypeError list_ctor        (List *list);
 TypeError list_cmd_dump    (List *list);
-TypeError list_graph_dump  (List *list, FILE *dump_file);
+TypeError list_graph_dump  (List *list, int *number_grpah_dump);
+TypeError list_html_dump   (int number_grpah_dump);
 TypeError list_verify      (List *list);
 TypeError list_dtor        (List *list);
 TypeError list_insert      (List *list, int index, type_el value, int *new_index);

@@ -11,6 +11,8 @@ const int DEFAULT_SIZE = 0;
 const int DEFAULT_CAPACITY = 1;
 const double MULTIPLIER_CAPACITY = 2;
 const int POISON_INT = 0xbe;
+const int MAX_SIZE_NAME_DUMP = 50;
+const int MAX_SIZE_COMMAND = 100;
 
 static TypeError list_increase(List *list);
 static TypeError list_reduce(List *list, List *new_list, int *index);
@@ -24,7 +26,7 @@ TypeError list_ctor(List *list)
     if (!list)
         return ERROR_INVALID_LIST;
 
-    list->fre = 1;
+    list->free = 1;
     list->capacity = DEFAULT_CAPACITY;
     list->size = DEFAULT_SIZE;
 
@@ -61,7 +63,7 @@ TypeError list_cmd_dump(List *list)
         printf("v");
     printf("\nLIST:\n\n");
 
-    printf("FRE = %d\n", list->fre);
+    printf("free = %d\n", list->free);
     printf("SIZ = %d\n", list->size);
     printf("CAP = %d\n", list->capacity);
 
@@ -97,13 +99,18 @@ TypeError list_cmd_dump(List *list)
 //     GraphvizNodeShape shape;
 // }
 
-TypeError list_graph_dump(List *list, FILE *dump_file)
+TypeError list_graph_dump(List *list, int *number_grpah_dump)
 {
-    if (!list)
-        return ERROR_INVALID_LIST;
+    char buffer[MAX_SIZE_NAME_DUMP] = "";
+    snprintf(buffer, MAX_SIZE_NAME_DUMP, "dumps/dump%d", *number_grpah_dump);
 
-    if (!dump_file)
-        return ERROR_INVALID_FILE;
+    FILE *dump_file = fopen(buffer, "w");
+    if (!dump_file) {
+        printf("Error open file to dump\n");
+        return ERROR_OPEN_FILE;
+    }
+    
+    if (!list) return ERROR_INVALID_LIST;
 
     TypeError err = list_verify(list);
     if (err)
@@ -112,7 +119,7 @@ TypeError list_graph_dump(List *list, FILE *dump_file)
     fprintf(dump_file, "digraph {\n"
                        "\tgraph[label = \"List\", labelloc = top, "
                        "labeljust = center, fontsize = 70, fontcolor = \"#e33e19\"];\n"
-                       "\tgraph[dpi = 200];\n"
+                       "\tgraph[dpi = 140];\n"
 	                   "\tsplines = ortho;\n"
                        "\tbgcolor = \"#2F353B\"\n"
                        "\tedge[minlen = 3, penwidth = 3];\n");
@@ -143,7 +150,7 @@ TypeError list_graph_dump(List *list, FILE *dump_file)
     fprintf(dump_file, "\t\tnode_free[label = \"free\", fillcolor = \"#e3964d\"];\n");
     fprintf(dump_file, "\t}\n");
 
-    fprintf(dump_file, "\tnode_free->node%d [color = \"#cf3000\"];\n", list->fre);
+    fprintf(dump_file, "\tnode_free->node%d [color = \"#cf3000\"];\n", list->free);
 
     for (int i = 0; i < list->capacity - 1; i++) {
         fprintf(dump_file, "\tnode%d->node%d[weight = 100, style = invis];\n", i, i + 1);
@@ -160,7 +167,39 @@ TypeError list_graph_dump(List *list, FILE *dump_file)
 
     fprintf(dump_file, "}\n");
 
+    (*number_grpah_dump)++;
+    fclose(dump_file);
+
+    char command[MAX_SIZE_COMMAND] = "";
+    snprintf(command, MAX_SIZE_COMMAND, "gvpack -u %s | dot -Tpng -o %s.png", buffer, buffer);
+    int sys = system(command);
+    if (sys) 
+        return ERROR_SYSTEM_COMMAND;
+
     return list_verify(list);
+}
+
+TypeError list_html_dump(int number_grpah_dump)
+{
+    char buffer[MAX_SIZE_NAME_DUMP] = "";
+    snprintf(buffer, MAX_SIZE_NAME_DUMP, "dumps/dump.html");
+
+    FILE *html_file = fopen(buffer, "w");
+    if (!html_file) {
+        printf("Error open file to dump\n");
+        return ERROR_OPEN_FILE;
+    }
+
+    fprintf(html_file, "<pre>\n");
+
+    for (int i = 1; i <= number_grpah_dump; i++) {
+        fprintf(html_file, "<img src = \"dump%d.png\">\n", i);
+    }
+
+    fprintf(html_file, "</pre>\n");
+
+    fclose(html_file);
+    return ERROR_NO;
 }
 
 TypeError list_verify(List *list)
@@ -210,7 +249,7 @@ TypeError list_verify(List *list)
             return ERROR_INVALID_INDEX_PREV;
     }
 
-    if (list->fre < 0 || list->fre > list->capacity)
+    if (list->free < 0 || list->free > list->capacity)
         return ERROR_INVALID_INDEX_FRE;
 
     return ERROR_NO;
@@ -223,7 +262,7 @@ TypeError list_dtor(List *list)
 
     TypeError err = list_verify(list);
 
-    list->fre = POISON_INT;
+    list->free = POISON_INT;
     list->capacity = POISON_INT;
     list->size = POISON_INT;
     free(list->data);
@@ -269,8 +308,8 @@ static TypeError list_increase(List *list)
     set_index_prev(list->prev, new_capacity - old_capacity);
     list->prev -= old_capacity;
 
-    if (list->fre == 0)
-        list->fre = list->size + 1;
+    if (list->free == 0)
+        list->free = list->size + 1;
 
     return list_verify(list);
 }
@@ -284,7 +323,7 @@ static TypeError list_reduce(List *list, List *new_list, int *index)
 
     new_list->capacity = (int)(list->capacity / MULTIPLIER_CAPACITY);
     new_list->size = list->size;
-    new_list->fre = new_list->capacity;
+    new_list->free = new_list->capacity;
 
     new_list->data = (type_el *)calloc(new_list->capacity + 1, sizeof(type_el));
     if (!new_list->data)
@@ -323,9 +362,9 @@ TypeError list_insert(List *list, int index, type_el value, int *new_index)
 
     list->size++;
 
-    memcpy(&list->data[list->fre], &value, sizeof(type_el));
-    int old_fre = list->fre;
-    list->fre = list->next[old_fre];
+    memcpy(&list->data[list->free], &value, sizeof(type_el));
+    int old_fre = list->free;
+    list->free = list->next[old_fre];
 
     list->next[old_fre] = list->next[index];
     list->prev[old_fre] = index;
@@ -377,10 +416,10 @@ TypeError list_erase(List *list, int index, type_el *value)
     list->next[list->prev[index]] = list->next[index];
     list->prev[list->next[index]] = list->prev[index];
 
-    int old_fre = list->fre;
-    list->fre = index;
-    list->next[list->fre] = old_fre % list->capacity;
-    list->prev[list->fre] = -1;
+    int old_fre = list->free;
+    list->free = index;
+    list->next[list->free] = old_fre % list->capacity;
+    list->prev[list->free] = -1;
 
     return list_verify(list);
 }

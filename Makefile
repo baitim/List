@@ -3,13 +3,10 @@ OPTIONS = -O3 -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloa
 FILES = $(wildcard *.cpp)
 FILES_INC = $(wildcard *.h)
 
-build : list run dump
+build : list run
 
 list : $(FILES) $(FILES_INC)
 	g++ $(FILES) -o list $(OPTIONS)
 
 run :
 	./list
-
-dump :
-	gvpack -u dump.dot | dot -Tpng -o dump.png
