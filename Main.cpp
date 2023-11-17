@@ -8,8 +8,8 @@ int main()
     printf(print_lblue("# Implementation of List.\n"
                        "# (c) BAIDUSENOV TIMUR, 2023\n\n"));
     
-    int err = 0;
-    int number_grpah_dump = 1;
+    TypeError err = ERROR_NO;
+    int number_graph_dump = 1;
 
     List list = {};
 
@@ -47,7 +47,7 @@ int main()
             printf("Element in %d = \n", i - 1);
             print_el(&value_el);
         }
-        err = list_graph_dump(&list, &number_grpah_dump);
+        err = list_graph_dump(&list, &number_graph_dump);
         if (err) {
             err_dump(err);
             return err;
@@ -214,7 +214,7 @@ int main()
         }
     }
 
-    err = list_graph_dump(&list, &number_grpah_dump);
+    err = list_graph_dump(&list, &number_graph_dump);
     if (err) {
         err_dump(err);
         return err;
@@ -226,7 +226,7 @@ int main()
         return err;
     }
 
-    err = list_html_dump(number_grpah_dump);
+    err = list_html_dump(number_graph_dump);
     if (err) {
         err_dump(err);
         return err;

@@ -90,19 +90,10 @@ TypeError list_cmd_dump(List *list)
     return list_verify(list);
 }
 
-// enum GraphvizNodeShape
-// {
-// };
-// struct GraphvizNode
-// {
-//     const char* label;
-//     GraphvizNodeShape shape;
-// }
-
-TypeError list_graph_dump(List *list, int *number_grpah_dump)
+TypeError list_graph_dump(List *list, int *number_graph_dump)
 {
     char buffer[MAX_SIZE_NAME_DUMP] = "";
-    snprintf(buffer, MAX_SIZE_NAME_DUMP, "dumps/dump%d", *number_grpah_dump);
+    snprintf(buffer, MAX_SIZE_NAME_DUMP, "dumps/dump%d", *number_graph_dump);
 
     FILE *dump_file = fopen(buffer, "w");
     if (!dump_file) {
@@ -167,7 +158,7 @@ TypeError list_graph_dump(List *list, int *number_grpah_dump)
 
     fprintf(dump_file, "}\n");
 
-    (*number_grpah_dump)++;
+    (*number_graph_dump)++;
     fclose(dump_file);
 
     char command[MAX_SIZE_COMMAND] = "";
@@ -179,7 +170,7 @@ TypeError list_graph_dump(List *list, int *number_grpah_dump)
     return list_verify(list);
 }
 
-TypeError list_html_dump(int number_grpah_dump)
+TypeError list_html_dump(int number_graph_dump)
 {
     char buffer[MAX_SIZE_NAME_DUMP] = "";
     snprintf(buffer, MAX_SIZE_NAME_DUMP, "dumps/dump.html");
@@ -192,7 +183,7 @@ TypeError list_html_dump(int number_grpah_dump)
 
     fprintf(html_file, "<pre>\n");
 
-    for (int i = 1; i <= number_grpah_dump; i++) {
+    for (int i = 1; i <= number_graph_dump; i++) {
         fprintf(html_file, "<img src = \"dump%d.png\">\n", i);
     }
 
